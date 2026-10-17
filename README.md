@@ -1,4 +1,4 @@
-# Cyber Diary & Real-Time Collaborative Workspace
+# Personal Diary & Real-Time Collaborative Workspace
 
 A feature-rich, multi-theme personal diary and collaborative productivity web application designed with real-time peer-to-peer communication, cloud synchronization, and modular ES6 architecture.
 
@@ -23,7 +23,7 @@ A feature-rich, multi-theme personal diary and collaborative productivity web ap
 ---
 
 ## 📖 Project Overview
-Cyber Diary is a sophisticated client-side web application that merges private journaling with decentralized, real-time collaboration tools. Built using native ES6 modules without heavy framework overhead, it provides an ultra-fast, highly customizable environment where users can manage rich text notes, collaborate live via WebRTC rooms, sync data securely with Google Apps Script cloud backends, and communicate instantly through an encrypted direct messaging pipeline.
+Personal Diary is a sophisticated client-side web application that merges private journaling with decentralized, real-time collaboration tools. Built using native ES6 modules without heavy framework overhead, it provides an ultra-fast, highly customizable environment where users can manage rich text notes, collaborate live via WebRTC rooms, sync data securely with Google Apps Script cloud backends, and communicate instantly through an encrypted direct messaging pipeline.
 
 ---
 
