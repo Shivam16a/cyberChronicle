@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="default">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Personal Diary // Modern Workspace</title>
+
+    <!-- Bootstrap 5 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+    <!-- HTML2Canvas for exact note-card to image conversion -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+    <!-- PeerJS for Realtime P2P Note Sync & Two-Way Live Chat -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/themes.css" />
+    <link rel="stylesheet" href="css/animations.css" />
+</head>
+
+<body class="theme-default">
+    <canvas id="fx-canvas"></canvas>
+    <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <i class="bi bi-journal-bookmark-fill text-primary"></i>
+                    <span class="brand-text">NOTES & DIARY</span>
+                </div>
+                <button id="btn-new-note" class="cyber-btn" title="Create New Page">
+                    <i class="bi bi-plus-lg"></i> NEW
+                </button>
+
+                <button id="btn-open-profile" class="btn btn-sm btn-outline-info rounded-circle p-1 me-2"
+                    title="User Profile">
+                    <img id="sidebar-avatar-img" src="https://cdn-icons-png.flaticon.com/512/847/847969.png" width="28"
+                        height="28" class="rounded-circle" style="object-fit:cover;" />
+                </button>
+
+            </div>
+
+            <div class="device-telemetry">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="pulse-indicator"></span>
+                    <span class="small font-monospace">DEVICE: <span id="lbl-device-id">SYNC...</span></span>
+                </div>
+            </div>
+
+            <!-- Search Box -->
+            <div class="search-box">
+                <i class="bi bi-search text-muted"></i>
+                <input type="text" id="note-search" placeholder="Search notes, vocab, tasks..." />
+            </div>
+
+            <!-- Notes Entry List -->
+            <div class="notes-scroll">
+                <ul id="notes-list" class="notes-list"></ul>
+            </div>
+
+            <!-- Sidebar Controls -->
+            <div class="sidebar-footer">
+                <button class="cyber-btn" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                    <i class="bi bi-palette"></i> THEMES
+                </button>
+                <button class="cyber-btn text-info" id="btn-sync-cloud">
+                    <i class="bi bi-cloud-arrow-up-fill"></i> SYNC CORE
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-workspace">
+            <!-- Top Action Strip -->
+            <header class="top-nav">
+                <div class="top-left d-flex align-items-center gap-2">
+                    <button id="sidebar-toggle" class="cyber-btn d-md-none"><i class="bi bi-list fs-5"></i></button>
+                    <span class="badge bg-secondary-subtle text-secondary" id="save-status">SAVED LOCALLY</span>
+                </div>
+
+                <div class="action-tools">
+                    <div class="tool-group">
+                        <button class="tool-btn text-primary" id="btn-share-note" title="Share note">
+                            <i class="bi bi-share fs-5"></i>
+                        </button>
+
+                        <button class="tool-btn text-info position-relative" id="btn-toggle-live-chat"
+                            title="Open Live Note Chat">
+                            <i class="bi bi-chat-dots-fill fs-5"></i>
+                            <span class="chat-badge-dot d-none" id="chat-unread-dot"></span>
+                        </button>
+
+                        <button class="tool-btn text-warning" id="btn-open-ai-assistant" title="AI Assistant for Notes">
+                            <i class="bi bi-stars fs-5"></i>
+                        </button>
+
+                        <button class="tool-btn text-info" id="btn-open-friends" title="In-App Network & Friends">
+                            <i class="bi bi-people-fill fs-5"></i>
+                        </button>
+
+                    </div>
+
+                    <!-- Undo / Redo -->
+                    <div class="tool-group">
+                        <button class="tool-btn" id="btn-undo" title="Undo (Ctrl+Z)"><i
+                                class="bi bi-arrow-counterclockwise"></i></button>
+                        <button class="tool-btn" id="btn-redo" title="Redo (Ctrl+Y)"><i
+                                class="bi bi-arrow-clockwise"></i></button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Center Note Canvas (Single document editable surface across all devices) -->
+            <section class="editor-viewport">
+                <div id="tilt-card" class="note-card">
+                    <div class="card-meta">
+                        <span class="font-monospace text-muted"><i class="bi bi-fingerprint"></i> ID: <span
+                                id="note-block-id">0x00</span></span>
+                        <span class="font-monospace text-muted" id="note-timestamp">--</span>
+                    </div>
+
+                    <!-- Direct single document editable surface -->
+                    <div id="note-body" class="note-body" contenteditable="true"
+                        data-placeholder="Start typing your note here... (First line will be title automatically, press '/' for shortcuts)">
+                    </div>
+                </div>
+            </section>
+
+            <!-- FLOATING SELECTION TOOLBAR -->
+            <div id="floating-toolbar" class="floating-toolbar d-none">
+                <div class="color-palette-bar">
+                    <span class="color-dot" style="background:#1e293b;" data-color="#1e293b" title="Dark Slate"></span>
+                    <span class="color-dot" style="background:#f59e0b;" data-color="#f59e0b"
+                        title="Amber Orange"></span>
+                    <span class="color-dot" style="background:#ef4444;" data-color="#ef4444" title="Coral Red"></span>
+                    <span class="color-dot" style="background:#3b82f6;" data-color="#3b82f6" title="Bright Blue"></span>
+                    <span class="color-dot" style="background:#10b981;" data-color="#10b981"
+                        title="Emerald Green"></span>
+                </div>
+                <div class="divider-v"></div>
+                <button class="fmt-btn" data-cmd="bold" title="Bold"><strong>B</strong></button>
+                <button class="fmt-btn" data-cmd="italic" title="Italic"><em>I</em></button>
+                <button class="fmt-btn" data-cmd="underline" title="Underline"><u>U</u></button>
+                <button class="fmt-btn active-highlight" id="btn-text-highlight" title="Background Highlight">
+                    <i class="bi bi-pen-fill text-warning"></i>
+                </button>
+                <div class="divider-v"></div>
+                <button class="fmt-btn" id="btn-text-copy" title="Copy"><i class="bi bi-clipboard"></i></button>
+                <button class="fmt-btn" id="btn-text-cut" title="Cut"><i class="bi bi-scissors"></i></button>
+            </div>
+
+            <!-- SCROLLABLE NOTION/XIAOMI SLASH '/' POPUP -->
+            <div id="slash-popup" class="slash-popup d-none">
+                <div class="slash-scroll-area">
+                    <div class="slash-section-label">Recently used & Styles</div>
+
+                    <button class="slash-item" data-action="h1">
+                        <span class="badge-icon bg-warning-subtle text-warning-emphasis">H1</span>
+                        <div><strong>Title</strong><small>Large primary heading</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="h2">
+                        <span class="badge-icon bg-warning-subtle text-warning-emphasis">H2</span>
+                        <div><strong>Subtitle</strong><small>Medium sub-heading</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="h3">
+                        <span class="badge-icon bg-warning-subtle text-warning-emphasis">H3</span>
+                        <div><strong>Heading</strong><small>Small section heading</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="p">
+                        <span class="badge-icon bg-secondary-subtle text-secondary-emphasis">Aa</span>
+                        <div><strong>Body</strong><small>Standard text paragraph</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="quote">
+                        <span class="badge-icon bg-secondary-subtle text-secondary-emphasis">“</span>
+                        <div><strong>Note</strong><small>Highlight / Quote block</small></div>
+                    </button>
+
+                    <div class="slash-section-label">Lists & Indents</div>
+
+                    <button class="slash-item" data-action="checklist">
+                        <span class="badge-icon bg-primary-subtle text-primary"><i
+                                class="bi bi-check2-circle"></i></span>
+                        <div><strong>To-dos</strong><small>Interactive checkbox item</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="ul">
+                        <span class="badge-icon bg-info-subtle text-info"><i class="bi bi-list-ul"></i></span>
+                        <div><strong>Bulleted list</strong><small>Unordered bulleted list</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="ol">
+                        <span class="badge-icon bg-info-subtle text-info"><i class="bi bi-list-ol"></i></span>
+                        <div><strong>Numbered list</strong><small>Ordered 1, 2, 3 sequence</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="indent">
+                        <span class="badge-icon bg-light text-dark"><i class="bi bi-text-indent-left"></i></span>
+                        <div><strong>Increase indent</strong><small>Shift paragraph right</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="outdent">
+                        <span class="badge-icon bg-light text-dark"><i class="bi bi-text-indent-right"></i></span>
+                        <div><strong>Decrease indent</strong><small>Shift paragraph left</small></div>
+                    </button>
+
+                    <div class="slash-section-label">Alignment</div>
+
+                    <button class="slash-item" data-action="alignLeft">
+                        <span class="badge-icon bg-light text-dark"><i class="bi bi-text-left"></i></span>
+                        <div><strong>Align text left</strong><small>Default left layout</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="alignCenter">
+                        <span class="badge-icon bg-light text-dark"><i class="bi bi-text-center"></i></span>
+                        <div><strong>Align text centre</strong><small>Center-focused paragraph</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="alignRight">
+                        <span class="badge-icon bg-light text-dark"><i class="bi bi-text-right"></i></span>
+                        <div><strong>Align text right</strong><small>Align toward right side</small></div>
+                    </button>
+
+                    <div class="slash-section-label">Inserts & Media</div>
+
+                    <button class="slash-item" data-action="divider">
+                        <span class="badge-icon bg-success-subtle text-success"><i class="bi bi-hr"></i></span>
+                        <div><strong>Divider</strong><small>Horizontal separator line</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="image">
+                        <span class="badge-icon bg-success-subtle text-success"><i class="bi bi-image"></i></span>
+                        <div><strong>Photos</strong><small>Insert image from device</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="dual-image">
+                        <span class="badge-icon bg-success-subtle text-success"><i class="bi bi-grid-1x2"></i></span>
+                        <div><strong>Dual Images Grid</strong><small>Side-by-side or stacked</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="camera">
+                        <span class="badge-icon bg-success-subtle text-success"><i class="bi bi-camera"></i></span>
+                        <div><strong>Take photo</strong><small>Live optic capture</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="video">
+                        <span class="badge-icon bg-danger-subtle text-danger"><i class="bi bi-camera-video"></i></span>
+                        <div><strong>Take video</strong><small>Short video memo</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="doodle">
+                        <span class="badge-icon bg-info-subtle text-info"><i class="bi bi-pencil"></i></span>
+                        <div><strong>Doodle</strong><small>Interactive draw canvas</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="table">
+                        <span class="badge-icon bg-warning-subtle text-warning-emphasis"><i
+                                class="bi bi-table"></i></span>
+                        <div><strong>Spreadsheet (Table)</strong><small>Add rows and columns</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="contact">
+                        <span class="badge-icon bg-primary-subtle text-primary"><i
+                                class="bi bi-person-lines-fill"></i></span>
+                        <div><strong>Contact Card</strong><small>Phone, address & details</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="vocab">
+                        <span class="badge-icon bg-warning-subtle text-warning-emphasis"><i
+                                class="bi bi-translate"></i></span>
+                        <div><strong>Vocab / Phrase</strong><small>Language learning phrase</small></div>
+                    </button>
+
+                    <button class="slash-item" data-action="audio">
+                        <span class="badge-icon bg-danger-subtle text-danger"><i class="bi bi-mic"></i></span>
+                        <div><strong>Audio Memo</strong><small>Record live voice clip</small></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- REAL-TIME NOTE CHAT & ACTIVITY AUDIT LOG PANEL -->
+            <div id="note-chat-panel" class="note-chat-panel d-none">
+                <div class="chat-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="pulse-indicator"></span>
+                        <div>
+                            <!-- Toggle Tabs: Live Chat vs Activity Log -->
+                            <div class="btn-group btn-group-sm mb-1" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-primary active"
+                                    id="tab-btn-chat">Live Chat</button>
+                                <button type="button" class="btn btn-sm btn-outline-warning"
+                                    id="tab-btn-activity">Activity Log</button>
+                            </div>
+                            <small class="text-muted d-block" id="chat-active-peers">Connecting to room...</small>
+                        </div>
+                    </div>
+                    <button class="btn-close btn-close-white" id="btn-close-chat"></button>
+                </div>
+
+                <!-- Chat Messages View -->
+                <div class="chat-messages-area" id="chat-messages-container">
+                    <!-- Live multi-color chat messages will be injected here -->
+                </div>
+
+                <!-- Activity / Audit History View -->
+                <div class="chat-messages-area d-none" id="activity-log-container">
+                    <div class="small text-muted mb-2 font-monospace">// REAL-TIME EDIT & AUDIT HISTORY</div>
+                </div>
+
+                <!-- Message Input Box -->
+                <form id="chat-input-form" class="chat-input-box">
+                    <input type="text" id="chat-msg-input" placeholder="Type a message to peers..."
+                        autocomplete="off" />
+                    <button type="submit" class="btn-send-chat" title="Send"><i class="bi bi-send-fill"></i></button>
+                </form>
+            </div>
+
+            <!-- DEDICATED SOCIAL MESSENGER & DIRECT CHAT SIDEBAR DRAWER (Right Side) -->
+            <div id="direct-messenger-drawer" class="direct-messenger-drawer d-none">
+                <!-- View 1: Friends & Discovery List -->
+                <div id="messenger-list-view" class="messenger-view d-flex flex-column h-100">
+                    <div class="messenger-header pb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-chat-heart-fill text-primary fs-5"></i>
+                            <strong class="fs-6">Direct Messages</strong>
+                        </div>
+                        <button class="btn-close btn-close-white" id="btn-close-messenger"></button>
+                    </div>
+
+                    <!-- 2 TABS: 1. All Friends | 2. Add / Search Friends -->
+                    <div class="messenger-tabs-nav p-2 border-bottom border-secondary border-opacity-25 d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary active flex-grow-1" id="tab-nav-all-friends">
+                            <i class="bi bi-people me-1"></i> All Friends
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning flex-grow-1" id="tab-nav-search-friends">
+                            <i class="bi bi-person-plus me-1"></i> Add Friends
+                        </button>
+                    </div>
+
+                    <!-- TAB 1 CONTENT: ALL ACCEPTED FRIENDS LIST -->
+                    <div id="pane-all-friends" class="flex-grow-1 overflow-y-auto p-2">
+                        <!-- Pending Requests Banner (agar koi request aayi ho) -->
+                        <div id="pending-requests-section" class="p-2 mb-2 rounded border border-warning d-none"
+                            style="background: rgba(245, 158, 11, 0.08);">
+                            <div class="small text-warning fw-bold mb-1">// INCOMING REQUESTS</div>
+                            <ul id="pending-requests-list" class="list-unstyled mb-0"></ul>
+                        </div>
+
+                        <div class="small text-muted font-monospace px-2 mb-2">// CONNECTED CONVERSATIONS</div>
+                        <ul id="accepted-friends-list" class="list-unstyled mb-0"></ul>
+                    </div>
+
+                    <!-- TAB 2 CONTENT: SEARCH & DISCOVERY (Only visible on Tab 2 click) -->
+                    <div id="pane-search-friends" class="flex-grow-1 overflow-y-auto p-3 d-none">
+                        <label class="form-label small text-muted font-monospace">// DISCOVER USERS</label>
+                        <div class="input-group input-group-sm mb-3">
+                            <span class="input-group-text bg-transparent border-secondary text-muted"><i
+                                    class="bi bi-search"></i></span>
+                            <input type="text" id="messenger-search-input" class="form-control cyber-select"
+                                placeholder="Search by name or Device ID..." />
+                            <button class="cyber-btn btn-sm" id="btn-search-user-action">Find</button>
+                        </div>
+                        <div id="search-user-result" class="mb-3 d-none"></div>
+                        <small class="text-muted d-block font-monospace">Tips: Public profiles can be searched by
+                            display name. Private devices can be searched directly using their exact Device ID.</small>
+                    </div>
+                </div>
+
+                <!-- View 2: Active 1-on-1 Chat Conversation Screen -->
+                <div id="messenger-chat-view" class="messenger-view d-none flex-column h-100">
+                    <div class="messenger-header py-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="tool-btn p-1 me-1" id="btn-back-to-friends-list"><i
+                                    class="bi bi-arrow-left fs-5"></i></button>
+                            <img id="chat-active-avatar" src="https://cdn-icons-png.flaticon.com/512/847/847969.png"
+                                width="34" height="34" class="rounded-circle border" style="object-fit:cover;" />
+                            <div>
+                                <strong id="chat-active-name" class="d-block" style="font-size: 0.95rem;">Friend
+                                    Name</strong>
+                                <small id="chat-active-sub" class="text-muted font-monospace"
+                                    style="font-size: 0.72rem;">NODE-ID</small>
+                            </div>
+                        </div>
+                        <button class="cyber-btn btn-sm text-info" id="btn-send-active-note-direct"
+                            title="Share current note into this chat">
+                            <i class="bi bi-journal-arrow-up"></i> Send Note
+                        </button>
+                    </div>
+
+                    <!-- Direct Messages Container -->
+                    <div class="chat-messages-area flex-grow-1 overflow-y-auto p-3" id="direct-chat-messages-container">
+                    </div>
+
+                    <!-- Quoted Reply Preview Bar -->
+                    <div id="reply-preview-bar" class="reply-preview-bar d-none">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-primary fw-bold" id="reply-to-user">Replying to...</small>
+                                <div class="small text-truncate" id="reply-to-snippet" style="max-width: 250px;">Snippet
+                                </div>
+                            </div>
+                            <button class="btn btn-sm text-muted p-0" id="btn-cancel-reply"><i
+                                    class="bi bi-x-lg"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Message Input Bar -->
+                    <form id="direct-chat-form" class="chat-input-box">
+                        <input type="text" id="direct-msg-input" placeholder="Type a message..." autocomplete="off" />
+                        <button type="submit" class="btn-send-chat" title="Send"><i
+                                class="bi bi-send-fill"></i></button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Floating Reaction Emoji Menu -->
+            <div id="message-reaction-picker" class="reaction-picker-menu d-none">
+                <span class="rx-emoji" data-emoji="👍">👍</span>
+                <span class="rx-emoji" data-emoji="❤️">❤️</span>
+                <span class="rx-emoji" data-emoji="😂">😂</span>
+                <span class="rx-emoji" data-emoji="😮">😮</span>
+                <span class="rx-emoji" data-emoji="😢">😢</span>
+                <span class="rx-emoji" data-emoji="🙏">🙏</span>
+                <button class="btn btn-sm p-1 text-muted ms-1" id="btn-quote-this-msg" title="Reply"><i
+                        class="bi bi-reply-fill"></i></button>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content cyber-modal">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title"><i class="bi bi-sliders"></i> Settings & Themes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Active Theme Environment</label>
+                        <select id="theme-selector" class="form-select cyber-select">
+                            <option value="default" selected>0. Clean Modern (Default Simple / Light)</option>
+                            <option value="cyber">1. Neural Cyberpunk HUD (Neon Cyan & Green)</option>
+                            <option value="space">2. Deep Cosmos & Nebula (Ultraviolet Cosmic)</option>
+                            <option value="doctor">3. Glassmorphism Bio-Tech (Minimal Sky Blue)</option>
+                            <option value="asteroid">4. Retro Hacker Terminal (Monospace Amber Gold)</option>
+                            <option value="farmer">5. Solarpunk / Terra Bio-Core (Organic Lime)</option>
+                        </select>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="toggle-particles" />
+                        <label class="form-check-label">Mouse Particle Trails</label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="toggle-3d-tilt" />
+                        <label class="form-check-label">3D Card Tilt on Hover (Desktop)</label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Google Apps Script Web App URL</label>
+                        <input type="url" id="cloud-endpoint" class="form-control cyber-select"
+                            placeholder="https://script.google.com/macros/s/.../exec" />
+                        <small class="text-muted">Direct sync to Google Docs, Drive & Sheets.</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button id="btn-export-json" class="cyber-btn flex-grow-1"><i class="bi bi-download"></i> EXPORT
+                            DISK</button>
+                        <label class="cyber-btn flex-grow-1 mb-0 text-center"><i class="bi bi-upload"></i> RESTORE
+                            <input type="file" id="btn-import-json" accept=".json" hidden />
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Xiaomi Notes Style "Share note" Bottom Sheet Modal -->
+    <div class="share-sheet-backdrop d-none" id="shareSheetBackdrop">
+        <div class="share-sheet-card" id="shareSheetCard">
+            <div class="share-sheet-title">Share note</div>
+
+            <button class="share-sheet-btn" id="btn-share-text">Share as text</button>
+            <button class="share-sheet-btn" id="btn-share-image">Share as image</button>
+            <button class="share-sheet-btn" id="btn-share-link">Share via link</button>
+            <button class="share-sheet-btn" id="btn-share-word">Share as Word file</button>
+
+            <button class="share-sheet-cancel" id="btn-share-cancel">Cancel</button>
+        </div>
+    </div>
+
+    <!-- 1. XIAOMI NOTES IMAGE CONTEXT POPUP -->
+    <div id="image-context-menu" class="image-context-menu d-none">
+        <button class="ctx-item" id="ctx-action-doodle">
+            <i class="bi bi-pencil-fill text-warning"></i> Doodle / Draw
+        </button>
+        <button class="ctx-item" id="ctx-action-resize">
+            <i class="bi bi-aspect-ratio text-info"></i> Switch size (Small/Large)
+        </button>
+        <button class="ctx-item" id="ctx-action-save">
+            <i class="bi bi-download"></i> Save
+        </button>
+        <button class="ctx-item" id="ctx-action-cut">
+            <i class="bi bi-scissors"></i> Cut
+        </button>
+        <button class="ctx-item" id="ctx-action-copy">
+            <i class="bi bi-clipboard"></i> Copy
+        </button>
+        <button class="ctx-item" id="ctx-action-share">
+            <i class="bi bi-share"></i> Share
+        </button>
+        <button class="ctx-item text-danger border-top" id="ctx-action-delete">
+            <i class="bi bi-trash3-fill"></i> Delete
+        </button>
+    </div>
+
+    <!-- 2. FULLSCREEN IMAGE DOODLE & ANNOTATOR -->
+    <div id="doodle-editor-modal" class="doodle-modal d-none">
+        <!-- Top Action Bar -->
+        <div class="doodle-top-bar">
+            <button class="doodle-text-btn" id="doodle-btn-cancel">Cancel</button>
+            <div class="d-flex align-items-center gap-3">
+                <button class="doodle-icon-btn" id="doodle-btn-undo" title="Undo"><i
+                        class="bi bi-arrow-counterclockwise"></i></button>
+                <button class="doodle-icon-btn" id="doodle-btn-redo" title="Redo"><i
+                        class="bi bi-arrow-clockwise"></i></button>
+            </div>
+            <button class="doodle-text-btn fw-bold text-warning" id="doodle-btn-save">Save</button>
+        </div>
+
+        <!-- Canvas Drawing Viewport -->
+        <div class="doodle-canvas-viewport">
+            <canvas id="doodle-draw-canvas"></canvas>
+        </div>
+
+        <!-- Tool Properties Card -->
+        <div id="doodle-props-popup" class="doodle-props-card d-none">
+            <div class="props-title" id="props-tool-title">Highlighter</div>
+            <div class="props-preview-box">
+                <div id="props-color-preview" class="props-preview-bar"></div>
+            </div>
+
+            <div class="props-control-row">
+                <label>Width</label>
+                <input type="range" id="doodle-prop-width" min="2" max="50" value="25" />
+            </div>
+
+            <div class="props-control-row">
+                <label>Opacity</label>
+                <input type="range" id="doodle-prop-opacity" min="10" max="100" value="50" />
+            </div>
+
+            <div class="props-control-row">
+                <label>Colour</label>
+                <div class="props-colors-row">
+                    <span class="color-circle active" style="background:#facc15;" data-color="#facc15"></span>
+                    <span class="color-circle" style="background:#f472b6;" data-color="#f472b6"></span>
+                    <span class="color-circle" style="background:#4ade80;" data-color="#4ade80"></span>
+                    <span class="color-circle" style="background:#60a5fa;" data-color="#60a5fa"></span>
+                    <input type="color" id="doodle-prop-custom-color" class="color-picker-input" value="#facc15" />
+                </div>
+            </div>
+
+            <div class="props-control-row d-flex justify-content-between align-items-center mt-2">
+                <label class="mb-0">Straight line</label>
+                <input type="checkbox" id="doodle-prop-straight" class="form-check-input" />
+            </div>
+        </div>
+
+        <!-- Bottom Tools Dock -->
+        <div class="doodle-bottom-dock">
+            <div class="doodle-dock-inner">
+                <button class="tool-station-btn" data-tool="pen" title="Fine Pen">
+                    <i class="bi bi-pen"></i>
+                </button>
+                <button class="tool-station-btn" data-tool="fountain" title="Fountain Pen">
+                    <i class="bi bi-feather"></i>
+                </button>
+                <button class="tool-station-btn" data-tool="pencil" title="Pencil">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="tool-station-btn active" data-tool="highlighter" title="Highlighter">
+                    <i class="bi bi-highlighter"></i>
+                </button>
+                <button class="tool-station-btn" data-tool="eraser" title="Eraser">
+                    <i class="bi bi-eraser"></i>
+                </button>
+                <div class="dock-divider"></div>
+                <button class="tool-station-btn" id="doodle-btn-quick-config">
+                    <span class="dock-color-bubble" id="dock-active-color-bubble" style="background:#facc15;"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Xiaomi Style "Generating..." Popup Loader -->
+    <div id="generating-modal" class="generating-backdrop d-none">
+        <div class="generating-card">
+            <div class="generating-title">Generating...</div>
+            <div class="generating-spinner"></div>
+            <button class="generating-cancel-btn" id="btn-cancel-generating">Cancel</button>
+        </div>
+    </div>
+
+    <!-- XIAOMI STYLE "AI ASSISTANT FOR NOTES" DRAWER -->
+    <div id="ai-sheet-backdrop" class="ai-sheet-backdrop d-none">
+        <div class="ai-sheet-card">
+            <div class="ai-sheet-header">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="ai-sparkle-badge"><i class="bi bi-stars"></i></span>
+                    <strong class="ai-sheet-title">AI Assistant for Notes</strong>
+                </div>
+                <button class="ai-close-btn" id="btn-close-ai-sheet">Close</button>
+            </div>
+
+            <div id="ai-loading-indicator" class="ai-loading-box d-none">
+                <div class="spinner-border spinner-border-sm text-warning" role="status"></div>
+                <span class="ai-loading-text ms-2">Analyzing note with Gemini...</span>
+            </div>
+
+            <div class="ai-sheet-grid">
+                <div class="ai-grid-row">
+                    <button class="ai-action-btn" data-ai-action="format">
+                        <i class="bi bi-layout-text-window-reverse"></i>
+                        <span>Format</span>
+                    </button>
+                    <button class="ai-action-btn" data-ai-action="cleanup">
+                        <i class="bi bi-spellcheck text-success"></i>
+                        <span>Clean up (Spelling)</span>
+                    </button>
+                </div>
+
+                <button class="ai-action-btn full-width" data-ai-action="polish">
+                    <i class="bi bi-palette text-primary"></i>
+                    <span>Polish</span>
+                </button>
+
+                <button class="ai-action-btn full-width" data-ai-action="continue">
+                    <i class="bi bi-pencil-square text-warning"></i>
+                    <span>Continue writing</span>
+                </button>
+
+                <button class="ai-action-btn full-width" data-ai-action="elaborate">
+                    <i class="bi bi-arrows-expand"></i>
+                    <span>Elaborate</span>
+                </button>
+
+                <button class="ai-action-btn full-width" data-ai-action="shorten">
+                    <i class="bi bi-arrows-collapse text-info"></i>
+                    <span>Shorten</span>
+                </button>
+
+                <button class="ai-action-btn full-width" data-ai-action="formal">
+                    <i class="bi bi-briefcase text-secondary"></i>
+                    <span>Formal</span>
+                </button>
+
+                <button class="ai-action-btn full-width" data-ai-action="casual">
+                    <i class="bi bi-emoji-smile text-warning"></i>
+                    <span>Casual</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- USER PROFILE CONFIGURATION MODAL -->
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content cyber-modal">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title"><i class="bi bi-person-bounding-box"></i> User Profile & Identity</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-3 position-relative d-inline-block">
+                        <img id="profile-preview-avatar" src="https://cdn-icons-png.flaticon.com/512/847/847969.png"
+                            class="rounded-circle border border-2 border-info shadow" width="96" height="96"
+                            style="object-fit:cover; cursor:pointer;" />
+                        <label for="profile-avatar-input"
+                            class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-1"
+                            style="cursor:pointer;" title="Change Photo">
+                            <i class="bi bi-camera-fill small"></i>
+                        </label>
+                        <input type="file" id="profile-avatar-input" accept="image/*" hidden />
+                    </div>
+
+                    <div class="mb-3 text-start">
+                        <label class="form-label fw-bold">Display Name</label>
+                        <input type="text" id="profile-display-name" class="form-control cyber-select"
+                            placeholder="Enter your name (e.g., Shivam)" />
+                    </div>
+
+                    <div class="mb-3 text-start">
+                        <label class="form-label fw-bold">Permanent Device ID</label>
+                        <input type="text" id="profile-device-id-field" class="form-control cyber-select text-muted"
+                            readonly />
+                    </div>
+
+                    <div class="p-3 rounded border border-secondary text-start mb-3"
+                        style="background: rgba(125,125,125,0.06);">
+                        <div class="form-check form-switch mb-1">
+                            <input class="form-check-input" type="checkbox" id="profile-public-toggle" />
+                            <label class="form-check-label fw-bold" for="profile-public-toggle">Public Profile in Live
+                                Chat</label>
+                        </div>
+                        <small class="text-muted d-block" id="profile-mode-desc">
+                            Private Mode: Chat me sirf aapki Device ID dikhegi. Name aur Photo hide rahenge.
+                        </small>
+                    </div>
+
+                    <button type="button" id="btn-save-user-profile" class="cyber-btn w-100 py-2">
+                        <i class="bi bi-cloud-arrow-up-fill me-1"></i> Save to Google Cloud & Sync
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Inputs -->
+    <input type="file" id="file-image-input" accept="image/*" hidden />
+    <input type="file" id="file-dual-images" accept="image/*" multiple hidden />
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>

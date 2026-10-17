@@ -1,0 +1,287 @@
+/* ============================================================
+   GLOBAL CONTRAST & VISIBILITY ENFORCEMENT
+   ============================================================ */
+body {
+  color: var(--text-main) !important;
+  background-color: var(--bg-primary) !important;
+}
+
+h1, h2, h3, h4, h5, h6,
+.note-title,
+.note-body,
+.note-item-title {
+  color: var(--text-main) !important;
+}
+
+.note-item-preview,
+.card-meta,
+.card-meta span {
+  color: var(--text-muted) !important;
+}
+
+::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.8 !important;
+}
+
+/* ============================================================
+   THEME 0: DEFAULT THEME (Clean Modern Light)
+   ============================================================ */
+body.theme-default {
+  --bg-primary: #f8fafc;
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+  --border-color: #cbd5e1;
+  --neon-accent: #2563eb;
+  --neon-secondary: #059669;
+  --neon-glitch: #dc2626;
+  --text-main: #0f172a;          /* Deep Blackish Navy */
+  --text-muted: #64748b;         /* Slate Muted */
+  --modal-bg: #ffffff;
+  --modal-text: #0f172a;
+  --input-bg: #f1f5f9;
+  --input-text: #0f172a;
+  
+  /* CHAT SPECIFIC CONTRAST */
+  --chat-out-bg: #2563eb;        /* Vibrant Royal Blue */
+  --chat-out-text: #ffffff;      /* Pure White Text */
+  --chat-out-meta: #dbeafe;
+  --chat-in-bg: #f1f5f9;         /* Clean Soft Gray */
+  --chat-in-text: #0f172a;       /* Dark Readable Text */
+  --chat-in-meta: #64748b;
+  --close-btn-filter: none;
+  
+  --hud-glow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --font-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --card-radius: 16px;
+}
+
+body.theme-default .note-card {
+  clip-path: none;
+  border-radius: var(--card-radius);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+body.theme-default .note-title {
+  color: #1e3a8a !important;
+}
+
+/* ============================================================
+   THEME 1: Neural Cyberpunk HUD
+   ============================================================ */
+body.theme-cyber {
+  --bg-primary: #040711;
+  --bg-sidebar: rgba(8, 14, 28, 0.96);
+  --bg-card: rgba(10, 20, 38, 0.92);
+  --border-color: rgba(0, 243, 255, 0.45);
+  --neon-accent: #00f3ff;
+  --neon-secondary: #00ff66;
+  --neon-glitch: #ff0055;
+  --text-main: #f0fdf4;          /* High-Contrast Bright Mint */
+  --text-muted: #67e8f9;         /* Cyan Muted */
+  --modal-bg: #070d19;
+  --modal-text: #f0fdf4;
+  --input-bg: #0b1528;
+  --input-text: #00f3ff;
+  
+  /* CHAT SPECIFIC CONTRAST */
+  --chat-out-bg: #00f3ff;        /* Electric Cyan */
+  --chat-out-text: #000000;      /* Pure Black Text for 100% Readability */
+  --chat-out-meta: #003344;
+  --chat-in-bg: rgba(8, 20, 35, 0.95);
+  --chat-in-text: #ffffff;
+  --chat-in-meta: #67e8f9;
+  --close-btn-filter: invert(1) brightness(200%);
+
+  --hud-glow: 0 0 20px rgba(0, 243, 255, 0.35);
+  --font-heading: 'Orbitron', monospace;
+  --card-radius: 4px;
+}
+
+body.theme-cyber .note-card {
+  clip-path: polygon(
+    0 14px, 14px 0, 
+    calc(100% - 14px) 0, 100% 14px, 
+    100% calc(100% - 14px), calc(100% - 14px) 100%, 
+    14px 100%, 0 calc(100% - 14px)
+  );
+  border: 1px solid var(--border-color);
+}
+
+body.theme-cyber .note-title {
+  color: var(--neon-accent) !important;
+  text-shadow: 0 0 12px rgba(0, 243, 255, 0.4);
+}
+
+/* ============================================================
+   THEME 2: Deep Cosmos & Nebula
+   ============================================================ */
+body.theme-space {
+  --bg-primary: #080318;
+  --bg-sidebar: rgba(17, 7, 43, 0.96);
+  --bg-card: rgba(26, 12, 60, 0.9);
+  --border-color: rgba(168, 85, 247, 0.5);
+  --neon-accent: #c084fc;
+  --neon-secondary: #ec4899;
+  --neon-glitch: #38bdf8;
+  --text-main: #fbf7ff;          /* Crisp Lilac White */
+  --text-muted: #d8b4fe;         /* Soft Purple */
+  --modal-bg: #12092a;
+  --modal-text: #fbf7ff;
+  --input-bg: #1e0e3e;
+  --input-text: #f3e8ff;
+  
+  /* CHAT SPECIFIC CONTRAST */
+  --chat-out-bg: #a855f7;        /* Nebula Purple */
+  --chat-out-text: #ffffff;
+  --chat-out-meta: #f3e8ff;
+  --chat-in-bg: rgba(30, 15, 65, 0.95);
+  --chat-in-text: #ffffff;
+  --chat-in-meta: #d8b4fe;
+  --close-btn-filter: invert(1) brightness(200%);
+
+  --hud-glow: 0 0 22px rgba(168, 85, 247, 0.35);
+  --font-heading: 'Space Grotesk', sans-serif;
+  --card-radius: 16px;
+}
+
+body.theme-space .note-card {
+  clip-path: none;
+  border-radius: var(--card-radius);
+  border: 1px solid var(--border-color);
+}
+
+body.theme-space .note-title {
+  color: var(--neon-accent) !important;
+  text-shadow: 0 0 12px rgba(192, 132, 252, 0.4);
+}
+
+/* ============================================================
+   THEME 3: Glassmorphism Bio-Tech
+   ============================================================ */
+body.theme-doctor {
+  --bg-primary: #0b1329;
+  --bg-sidebar: rgba(14, 23, 48, 0.94);
+  --bg-card: rgba(19, 32, 66, 0.85);
+  --border-color: rgba(56, 189, 248, 0.4);
+  --neon-accent: #0ea5e9;
+  --neon-secondary: #38bdf8;
+  --neon-glitch: #64748b;
+  --text-main: #f0f9ff;          /* Clean Arctic White */
+  --text-muted: #7dd3fc;         /* Sky Blue */
+  --modal-bg: #0f1d38;
+  --modal-text: #f0f9ff;
+  --input-bg: #172a50;
+  --input-text: #f0f9ff;
+  
+  /* CHAT SPECIFIC CONTRAST */
+  --chat-out-bg: #0284c7;        /* Medical Sky Blue */
+  --chat-out-text: #ffffff;
+  --chat-out-meta: #e0f2fe;
+  --chat-in-bg: rgba(20, 35, 70, 0.95);
+  --chat-in-text: #ffffff;
+  --chat-in-meta: #7dd3fc;
+  --close-btn-filter: invert(1) brightness(200%);
+
+  --hud-glow: 0 8px 32px rgba(14, 165, 233, 0.25);
+  --font-heading: 'Rajdhani', sans-serif;
+  --card-radius: 20px;
+}
+
+body.theme-doctor .note-card {
+  clip-path: none;
+  border-radius: var(--card-radius);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(28px);
+}
+
+body.theme-doctor .note-title {
+  color: #38bdf8 !important;
+}
+
+/* ============================================================
+   THEME 4: Retro Hacker Terminal (AMBER GOLD - HIGHEST FIX)
+   ============================================================ */
+body.theme-asteroid {
+  --bg-primary: #0a0a0a;
+  --bg-sidebar: #121212;
+  --bg-card: #181818;
+  --border-color: #ffb000;
+  --neon-accent: #ffb000;
+  --neon-secondary: #ffd000;
+  --neon-glitch: #ff3300;
+  --text-main: #fffbeb;          /* High-Contrast Cream White on black */
+  --text-muted: #f59e0b;         /* Amber Accent Muted */
+  --modal-bg: #121212;
+  --modal-text: #fffbeb;
+  --input-bg: #1f1f1f;
+  --input-text: #ffdd44;
+  
+  /* CHAT SPECIFIC CONTRAST (Fixes Gold on Gold invisibility) */
+  --chat-out-bg: #d97706;        /* Deep Solid Amber */
+  --chat-out-text: #000000;      /* PURE BLACK BOLD TEXT for 100% Contrast */
+  --chat-out-meta: #261502;
+  --chat-in-bg: #222222;         /* Dark Contrast Box */
+  --chat-in-text: #fffbeb;       /* White-Gold Text */
+  --chat-in-meta: #f59e0b;
+  --close-btn-filter: invert(1) brightness(200%);
+
+  --hud-glow: 0 0 16px rgba(255, 176, 0, 0.35);
+  --font-heading: 'Share Tech Mono', monospace;
+  --card-radius: 0px;
+}
+
+body.theme-asteroid .note-card {
+  clip-path: none;
+  border-radius: 0px;
+  border: 1px solid var(--border-color);
+}
+
+body.theme-asteroid .note-title {
+  color: var(--neon-accent) !important;
+  text-shadow: 0 0 10px rgba(255, 176, 0, 0.3);
+}
+
+/* ============================================================
+   THEME 5: Solarpunk / Terra Bio-Core
+   ============================================================ */
+body.theme-farmer {
+  --bg-primary: #0c140e;
+  --bg-sidebar: rgba(16, 28, 18, 0.96);
+  --bg-card: rgba(22, 38, 26, 0.94);
+  --border-color: rgba(132, 204, 22, 0.5);
+  --neon-accent: #84cc16;
+  --neon-secondary: #facc15;
+  --neon-glitch: #10b981;
+  --text-main: #f7fee7;          /* Crisp Bio-Lime White */
+  --text-muted: #bef264;         /* Soft Lime */
+  --modal-bg: #111e13;
+  --modal-text: #f7fee7;
+  --input-bg: #1a2c1d;
+  --input-text: #f7fee7;
+  
+  /* CHAT SPECIFIC CONTRAST */
+  --chat-out-bg: #65a30d;        /* Deep Forest Green */
+  --chat-out-text: #000000;      /* Dark Text */
+  --chat-out-meta: #142803;
+  --chat-in-bg: rgba(25, 45, 30, 0.95);
+  --chat-in-text: #ffffff;
+  --chat-in-meta: #bef264;
+  --close-btn-filter: invert(1) brightness(200%);
+
+  --hud-glow: 0 0 18px rgba(132, 204, 22, 0.35);
+  --font-heading: 'Rajdhani', sans-serif;
+  --card-radius: 14px;
+}
+
+body.theme-farmer .note-card {
+  clip-path: none;
+  border-radius: var(--card-radius);
+  border: 1px solid var(--border-color);
+}
+
+body.theme-farmer .note-title {
+  color: var(--neon-accent) !important;
+  text-shadow: 0 0 10px rgba(132, 204, 22, 0.3);
+}
