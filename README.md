@@ -102,8 +102,15 @@ Open your web browser and go to:
 [http://127.0.0.1:5500](http://127.0.0.1:5500)
 
 ```
+---
 
+## Live Project Link
 
+1. **Direct live view on browser:**
+Direct use on browser
+```text
+    http://148.100.77.23
+```
 
 ---
 
