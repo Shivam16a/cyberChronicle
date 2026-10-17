@@ -104,7 +104,7 @@ Open your web browser and go to:
 ```
 ---
 
-## Live Project Link
+## Deploy Link
 
 1. **Direct live view on browser:**
 Direct use on browser
@@ -113,6 +113,16 @@ Direct use on browser
 ```
 
 ---
+## Github Repo Link 
+ ```text
+    https://github.com/Shivam16a/cyberChronicle
+```
+---
+## Video Link 
+demo video link
+```text
+    https://youtu.be/_xaY2G589Gk?si=fJ0fvdRS0MOzfQNl
+```
 
 ## 📜 License
 
