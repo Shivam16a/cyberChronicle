@@ -999,24 +999,27 @@ body:not(.theme-default) .generating-card {
 }
 
 /* Theme-adaptive Close Button Visibility */
-#btn-close-chat {
+#btn-close-chat,
+#btn-close-messenger {
   opacity: 0.75;
   transition: opacity 0.15s ease, transform 0.15s ease;
   cursor: pointer;
 }
 
-#btn-close-chat:hover {
+#btn-close-chat,
+#btn-close-messenger:hover {
   opacity: 1;
   transform: scale(1.1);
 }
 
 /* Default Light Theme par Black / Dark Gray Close Icon */
-body.theme-default #btn-close-chat {
+body.theme-default #btn-close-chat,
+body.theme-default #btn-close-messenger {
   filter: none !important;
 }
 
 /* Dark Themes (Cyber, Space, Doctor, Asteroid, Farmer) par White Close Icon */
-body:not(.theme-default) #btn-close-chat {
+body:not(.theme-default) #btn-close-chat, body:not(.theme-default) #btn-close-messenger {
   filter: invert(1) grayscale(100%) brightness(200%) !important;
 }
 
